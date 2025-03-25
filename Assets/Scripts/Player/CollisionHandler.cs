@@ -79,6 +79,9 @@ public class CollisionHandler : MonoBehaviour
         //particles
         crashParticles.Play();
 
+        //save data when player died
+        LevelManager.Instance.OnPlayerDeath(transform.position);
+
         GetComponent<Movement>().enabled = false;
         Invoke("ReloadLevel", 2f);  
     }
@@ -86,7 +89,7 @@ public class CollisionHandler : MonoBehaviour
     void ReloadLevel()
     {
         int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        SceneManager.LoadScene(currentSceneIndex);
+        LevelManager.Instance.RestartLevel();
     }
 
     void LoadNextLevel()
