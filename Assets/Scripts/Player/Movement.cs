@@ -4,19 +4,23 @@ using UnityEngine.InputSystem;
 
 public class Movement : MonoBehaviour
 {
-    [SerializeField] InputAction thrust;
-    [SerializeField] InputAction rotation;
-    [SerializeField] float thrustStrength = 1f;
-    [SerializeField] float rotationStrength = 1f;
-    [SerializeField] ParticleSystem mainEngineParticles;
-    [SerializeField] ParticleSystem leftEngineParticles;
-    [SerializeField] ParticleSystem rightEngineParticles;
+    [SerializeField] private InputAction thrust;
+    [SerializeField] private InputAction rotation;
+    [SerializeField] private float thrustStrength = 1f;
+    [SerializeField] private float rotationStrength = 1f;
+    [SerializeField] private ParticleSystem mainEngineParticles;
+    [SerializeField] private ParticleSystem leftEngineParticles;
+    [SerializeField] private ParticleSystem rightEngineParticles;
 
-    Rigidbody rb;
+    private Rigidbody rb;
+    private IAudioManager audioManager;
+    private MovementFeedbackPlayer feedbackPlayer;
 
-    void Start()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        audioManager = AudioManager.Instance;
+        feedbackPlayer = new MovementFeedbackPlayer(audioManager, mainEngineParticles, leftEngineParticles, rightEngineParticles);
     }
 
     private void OnEnable()
@@ -46,20 +50,12 @@ public class Movement : MonoBehaviour
     private void StartThrusting()
     {
         rb.AddRelativeForce(Vector3.up * thrustStrength * Time.fixedDeltaTime);
-        if (!AudioManager.Instance.IsSoundPlaying())
-        {
-            AudioManager.Instance.PlaySound("thrust");
-        }
-        if (!mainEngineParticles.isPlaying)
-        {
-            mainEngineParticles.Play();
-        }
+        feedbackPlayer.PlayThrustFeedback();
     }
 
     private void StopThrusting()
     {
-        AudioManager.Instance.StopSound();
-        mainEngineParticles.Stop();
+        feedbackPlayer.StopThrustFeedback();
     }
 
     
@@ -89,27 +85,18 @@ public class Movement : MonoBehaviour
     private void RotateRight()
     {
         ApplyRotation(rotationStrength);
-        if (!leftEngineParticles.isPlaying)
-        {
-            rightEngineParticles.Stop();
-            leftEngineParticles.Play();
-        }
+        feedbackPlayer.PlayRightRotationFeedback();
     }
 
     private void RotateLeft()
     {
         ApplyRotation(-rotationStrength);
-        if (!rightEngineParticles.isPlaying)
-        {
-            leftEngineParticles.Stop();
-            rightEngineParticles.Play();
-        }
+        feedbackPlayer.PlayLeftRotationFeedback();
     }
 
     private void StopRotating()
     {
-        leftEngineParticles.Stop();
-        rightEngineParticles.Stop();
+        feedbackPlayer.StopRotationFeedback();
     }
 
     private void ApplyRotation(float RotationStrength)

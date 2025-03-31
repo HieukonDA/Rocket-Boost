@@ -1906,6 +1906,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2267699164449366882, guid: d752e65520ad2e0439ba45d25b9e95d5, type: 3}
+      propertyPath: levelGeneratorPrefab
+      value: 
+      objectReference: {fileID: 8295112896699609122, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
     - target: {fileID: 2585040724905594208, guid: d752e65520ad2e0439ba45d25b9e95d5, type: 3}
       propertyPath: m_Name
       value: LevelManger
@@ -1951,6 +1955,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7227210821474518849, guid: d752e65520ad2e0439ba45d25b9e95d5, type: 3}
+      propertyPath: config
+      value: 
+      objectReference: {fileID: 11400000, guid: 039965a7f8cfb434abd051e71335b0e9, type: 2}
+    - target: {fileID: 7227210821474518849, guid: d752e65520ad2e0439ba45d25b9e95d5, type: 3}
       propertyPath: levelWidth
       value: 100
       objectReference: {fileID: 0}
@@ -1971,7 +1979,8 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 8107886340663348486, guid: d752e65520ad2e0439ba45d25b9e95d5, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d752e65520ad2e0439ba45d25b9e95d5, type: 3}

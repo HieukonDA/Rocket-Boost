@@ -8,19 +8,19 @@ public class Obscillator : MonoBehaviour
 
     private Vector3 startPosition;
     private Vector3 endPosition;
-    private float movementFactor;
+    private IMovementPattern movementPattern;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         startPosition = transform.position;
         endPosition = startPosition + movementVector;
+        movementPattern = new LinearOscillation(speed);    
     }
 
     // Update is called once per frame
     void Update()
     {
-        movementFactor = Mathf.PingPong(Time.time * speed, 1f);
-        transform.position = Vector3.Lerp(startPosition, endPosition, movementFactor);
+        transform.position = movementPattern.CalculatePosition(startPosition, endPosition, Time.time);
     }
 }

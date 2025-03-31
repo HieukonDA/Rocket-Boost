@@ -11,35 +11,29 @@ public class CollisionHandler : MonoBehaviour
     [SerializeField] ParticleSystem successParticles;
     [SerializeField] ParticleSystem crashParticles;
 
-    AudioSource audioSource;
+    private ILevelManager levelManager;
+    private IAudioManager audioManager;
+    private CollisionFeedbackPlayer feedbackPlayer;
+    private DebugHandler debugHandler;
+    private bool isControllable = true;
 
-    bool isControllable = true;
-    bool isCollisionable = true;
-
+    private void Awake()
+    {
+        levelManager = LevelManager.Instance;
+        audioManager = AudioManager.Instance;
+        feedbackPlayer = new CollisionFeedbackPlayer(audioManager, successParticles, crashParticles);
+        debugHandler = new DebugHandler(levelManager);
+    }
 
     void Update()
     {
-        RespondToDebugKeys();
-    }
-
-    private void RespondToDebugKeys()
-    {
-        if (Debug.isDebugBuild)
-        {
-            if (Input.GetKeyDown(KeyCode.L))
-            {
-                LoadNextLevel();
-            }
-            else if (Keyboard.current.cKey.wasPressedThisFrame)
-            {
-                isCollisionable = !isCollisionable;
-            }
-        }
+        debugHandler.Update();
     }
 
     private void OnCollisionEnter(Collision other)
     {
-        if (!isControllable || !isCollisionable) return;
+        Debug.Log("Collision detected with: " + other.gameObject.name + " at time: " + Time.time);
+        if (!isControllable || !debugHandler.IsCollisionable()) return;
 
         switch (other.gameObject.tag)
         {
@@ -55,45 +49,30 @@ public class CollisionHandler : MonoBehaviour
         }
     }
 
-    void StartSuccessSequence()
+    private void StartSuccessSequence()
     {
         isControllable = false;
-        //audio
-        AudioManager.Instance.StopSound();
-        AudioManager.Instance.PlaySound("success");
-
-        //particles
-        successParticles.Play();
+        feedbackPlayer.PlaySuccessFeedback();
         GetComponent<Movement>().enabled = false;
         Invoke("LoadNextLevel", levelLoadDelay);
     }
 
-    void StartCrashSequence()
+    private void StartCrashSequence()
     {
         isControllable = false;
-
-        //audio
-        AudioManager.Instance.StopSound();
-        AudioManager.Instance.PlaySound("crash");
-
-        //particles
-        crashParticles.Play();
-
-        //save data when player died
-        LevelManager.Instance.OnPlayerDeath(transform.position);
-
+        feedbackPlayer.PlayCrashFeedback();
+        levelManager.OnPlayerDeath(transform.position);
         GetComponent<Movement>().enabled = false;
-        Invoke("ReloadLevel", 2f);  
+        Invoke("ReloadLevel", 2f);
     }
 
-    void ReloadLevel()
+    private void ReloadLevel()
     {
-        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
-        LevelManager.Instance.RestartLevel();
+        levelManager.RestartLevel();
     }
 
-    void LoadNextLevel()
+    private void LoadNextLevel()
     {
-        LevelManager.Instance.OnLevelComplete();
+        levelManager.OnLevelComplete();
     }
 }

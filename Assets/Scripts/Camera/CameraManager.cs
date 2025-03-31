@@ -2,23 +2,21 @@ using UnityEngine;
 using Unity.Cinemachine;
 using UnityEngine.SceneManagement;
 
-public class CameraManager : MonoBehaviour
+public class CameraManager : MonoBehaviour, ICameraManager
 {
     private CinemachineCamera cinemachineCam;
 
     void Awake()
     {
         cinemachineCam = GetComponent<CinemachineCamera>();
-        Debug.Log("CameraManager created");
-        if(cinemachineCam == null)
+        if (cinemachineCam == null)
         {
             Debug.LogError("CinemachineCamera not found!");
             Destroy(gameObject);
             return;
         }
 
-        int currentIndex = SceneManager.GetActiveScene().buildIndex;
-        if (currentIndex == 2)
+        if (SceneManager.GetActiveScene().buildIndex == 2)
         {
             DontDestroyOnLoad(gameObject);
         }
@@ -26,6 +24,7 @@ public class CameraManager : MonoBehaviour
 
     public void SetTarget(Transform target)
     {
+        Debug.Log("Camera target set to: " + (target != null ? target.name : "Null"));
         cinemachineCam.Follow = target;
     }
 }

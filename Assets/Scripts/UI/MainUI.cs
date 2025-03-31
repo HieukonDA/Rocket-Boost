@@ -13,6 +13,9 @@ public class MainUI : MonoBehaviour
     private Transform settingPanel;
     private Transform X_button;
 
+    private AudioManager audioManager;
+    private EventSystemManager eventSystemManager;
+
     void Awake()
     {
         if (Instance != null)
@@ -25,16 +28,8 @@ public class MainUI : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         // Kiểm tra và giữ EventSystem duy nhất
-        EventSystem existingEventSystem = GameObject.FindFirstObjectByType<EventSystem>();
-        if (existingEventSystem != null && existingEventSystem.gameObject != gameObject)
-        {
-            Destroy(existingEventSystem.gameObject);
-        }
-        if (!GetComponent<EventSystem>())
-        {
-            gameObject.AddComponent<EventSystem>();
-            gameObject.AddComponent<StandaloneInputModule>();
-        }
+        audioManager = AudioManager.Instance;
+        eventSystemManager = new EventSystemManager(gameObject);
     }
 
     void Start()
@@ -48,21 +43,21 @@ public class MainUI : MonoBehaviour
 
         XButton.onClick.AddListener(XButtonClicked);
         settingButton.onClick.AddListener(SettingButtonClicked);
-        musicSetting.onValueChanged.AddListener((float value) => AudioManager.Instance.SetMusicVolume(value));
-        sfxSetting.onValueChanged.AddListener((float value) => AudioManager.Instance.SetSFXVolume(value));
+        musicSetting.onValueChanged.AddListener((float value) => audioManager.SetMusicVolume(value));
+        sfxSetting.onValueChanged.AddListener((float value) => audioManager.SetSFXVolume(value));
     }
 
     private void XButtonClicked()
     {
         settingPanel.gameObject.SetActive(false);
-        AudioManager.Instance.PlaySoundButton();
+        audioManager.PlaySoundButton();
         Debug.Log("X Button clicked - Attempting to play ClickButton");
     }
 
     private void SettingButtonClicked()
     {    
         settingPanel.gameObject.SetActive(true);
-        AudioManager.Instance.PlaySoundButton();
+        audioManager.PlaySoundButton();
         Debug.Log("X Button clicked - Attempting to play ClickButton");
     }
 

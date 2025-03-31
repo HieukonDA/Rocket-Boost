@@ -3,18 +3,22 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Cinemachine;
 
-public class LevelManager : MonoBehaviour
+public class LevelManager : MonoBehaviour, ILevelManager 
 {
     public static LevelManager Instance { get; private set; }
 
-    [SerializeField] private LevelGenerator levelGenerator;
-    private int currentLevel = 1;
-    private int currentSeed; // Seed hiện tại của level
-    private Vector3 lastPlayerPosition; // Vị trí người chơi khi chết
-    private bool isDead; // Trạng thái chết
+    [SerializeField] private GameObject levelGeneratorPrefab;
 
-    private Transform playerTransform; // Tham chiếu đến Player
-    private CameraManager cameraManager;
+    // thiet lap interface
+    private ILevelGenerator IlevelGenerator;
+    private ICameraManager IcameraManager;
+    private LevelDataManager levelDataManager;
+
+    // các thông số cơ bản như seed , tham chiếu đến vị trí player
+    private int currentLevel = 1;
+    private int currentSeed; 
+    private Transform playerTransform; 
+
 
     private void Awake()
     {
@@ -25,40 +29,40 @@ public class LevelManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        Debug.Log("LevelManager created");
+
+        // Xóa PlayerPrefs khi chạy trong Editor (chỉ để debug)
+        if (Debug.isDebugBuild)
+        {
+            PlayerPrefs.DeleteAll();
+            PlayerPrefs.Save();
+            Debug.Log("PlayerPrefs đã được xóa để bắt đầu từ Level 1");
+        }
+
+        levelDataManager = new LevelDataManager();
+        levelDataManager.LoadLevelData(out currentLevel, out currentSeed, out Vector3 lastPlayerPosition, out bool isDead);
+        levelDataManager.SetLastPlayerPosition(lastPlayerPosition);
+        levelDataManager.SetIsDead(isDead);
+
+        Debug.Log($"CurrentLevel: {PlayerPrefs.GetInt("CurrentLevel", 1)}");
 
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Tìm CinemachineCamera trong scene
-        CinemachineCamera camera = GameObject.FindFirstObjectByType<CinemachineCamera>();
-        if (camera != null)
-        {
-            cameraManager = camera.GetComponent<CameraManager>();
-            if (cameraManager == null)
-            {
-                camera.gameObject.AddComponent<CameraManager>();
-                cameraManager = camera.GetComponent<CameraManager>();
-            }
-        }
-
-        // Chỉ gán Follow Target trong Generator scene (ProceduralLevel)
+        // setting camera
+        IcameraManager = (ICameraManager)GameObject.FindFirstObjectByType<CameraManager>();
         if (currentLevel > 3)
         {
             GameObject player = GameObject.FindWithTag("Player");
             if (player != null)
             {
                 playerTransform = player.transform;
-                if (cameraManager != null)
-                {
-                    cameraManager.SetTarget(playerTransform);
-                }
+                IcameraManager?.SetTarget(playerTransform);
             }
             else
             {
-                playerTransform = null; // Đặt lại để tìm trong Update
+                playerTransform = null;
             }
         }
     }
@@ -66,20 +70,14 @@ public class LevelManager : MonoBehaviour
     private void Update()
     {
         // Chỉ tìm và gán Player trong Generator scene
-        if (currentLevel > 3)
+        if (currentLevel > 3 && (playerTransform == null || playerTransform.gameObject == null))
         {
-            if (playerTransform == null || playerTransform.gameObject == null)
+            GameObject player = GameObject.FindWithTag("Player");
+            if (player != null)
             {
-                GameObject player = GameObject.FindWithTag("Player");
-                if (player != null)
-                {
-                    playerTransform = player.transform;
-                    playerTransform.GetComponent<Movement>().enabled = !isDead;
-                    if (cameraManager != null)
-                    {
-                        cameraManager.SetTarget(playerTransform);
-                    }
-                }
+                playerTransform = player.transform;
+                playerTransform.GetComponent<Movement>().enabled = !levelDataManager.GetIsDead();
+                IcameraManager?.SetTarget(playerTransform);
             }
         }
     }
@@ -89,10 +87,10 @@ public class LevelManager : MonoBehaviour
         Debug.Log("LevelManager started with Current Level " + currentLevel);
         LoadLevel();
     }
-
-    
+ 
     private void LoadLevel()
     {
+        Debug.Log("LoadLevel called for Level " + currentLevel + " at time: " + Time.time);
         if (currentLevel <= 3)
         {
             // Load scene tĩnh
@@ -110,40 +108,37 @@ public class LevelManager : MonoBehaviour
     
     private void GenerateProceduralLevel()
     {
-        Debug.Log("Generating Procedural Level...");
+        if (IlevelGenerator == null)
+        {
+            GameObject generatorObj = Instantiate(levelGeneratorPrefab, transform);
+            IlevelGenerator = generatorObj.GetComponent<ILevelGenerator>();
+            Debug.Log("generatorObj spawned: " + (generatorObj != null ? generatorObj.name : "Null"));
+            Debug.Log("IlevelGenerator initialized: " + (IlevelGenerator != null ? "Yes" : "No"));
+        }
+
+        //nếu chưa có seed mới thì tạo seed ngẫu nhiên
+        if (currentSeed == 0) 
+        {
+            currentSeed = (int)System.DateTime.Now.Ticks; 
+        }
         
+        IlevelGenerator.GenerateLevel(currentLevel - 3, currentSeed); // Level 4 = 1, Level 5 = 2,...
 
-        Debug.Log($"Generating Procedural Level {currentLevel} with Seed {currentSeed}");
-        if (currentSeed == 0) // Nếu chưa có seed (level mới)
-        {
-            currentSeed = (int)System.DateTime.Now.Ticks; // Seed ngẫu nhiên
-        }
-        if (levelGenerator == null)
-        {
-            Debug.LogError("LevelGenerator is null! Please assign it in the Inspector.");
-            return;
-        }
-        levelGenerator.GenerateLevel(currentLevel - 3, currentSeed); // Level 4 = 1, Level 5 = 2,...
-        SaveLevelData();
-
+        // Lưu lại thông tin level
         GameObject player = GameObject.FindWithTag("Player");
-        // Đặt lại vị trí người chơi
         if (player != null)
         {
-            Debug.Log($"Player found, setting position to: {(isDead ? lastPlayerPosition : Vector3.zero)}");
-            player.GetComponent<Movement>().SetPosition(isDead ? lastPlayerPosition : Vector3.zero);
+            player.GetComponent<Movement>().SetPosition(levelDataManager.GetIsDead() ? levelDataManager.GetLastPlayerPosition() : Vector3.zero);
             player.GetComponent<Movement>().enabled = true;
         }
-        else
-        {
-            Debug.LogWarning("Player not found in scene!");
-        }
-        Debug.Log("generated position player" + player.transform.position);
+
+        levelDataManager.SaveLevelData(currentLevel, currentSeed, levelDataManager.GetLastPlayerPosition(), levelDataManager.GetIsDead());
     }
 
     
     public void RestartLevel()
     {
+        Debug.Log("RestartLevel called at time: " + Time.time);
         if (currentLevel <= 3)
         {
             LoadLevel(); // Reload scene tĩnh
@@ -151,8 +146,8 @@ public class LevelManager : MonoBehaviour
         else
         {
             GenerateProceduralLevel(); // Tái tạo level với seed hiện tại
-            lastPlayerPosition = Vector3.zero; // Reset về Start
-            isDead = false;
+            levelDataManager.SetLastPlayerPosition(Vector3.zero);
+            levelDataManager.SetIsDead(false);
         }
     }
 
@@ -177,8 +172,8 @@ public class LevelManager : MonoBehaviour
         if (currentLevel > 3)
         {
             currentSeed = (int)System.DateTime.Now.Ticks; // Seed mới cho level procedural tiếp theo
-            lastPlayerPosition = Vector3.zero; // Reset vị trí
-            isDead = false;
+            levelDataManager.SetLastPlayerPosition(Vector3.zero);
+            levelDataManager.SetIsDead(false);
         }
         LoadLevel();
     }
@@ -186,62 +181,25 @@ public class LevelManager : MonoBehaviour
     // Gọi khi người chơi chết
     public void OnPlayerDeath(Vector3 deathPosition)
     {
-        if (currentLevel > 3) // Chỉ lưu trạng thái cho procedural levels
+        if (currentLevel > 3)
         {
-            isDead = true;
-            lastPlayerPosition = deathPosition;
+            levelDataManager.SetIsDead(true);
+            levelDataManager.SetLastPlayerPosition(deathPosition);
             GameObject player = GameObject.FindWithTag("Player");
             if (player != null)
             {
-                Movement movement = player.GetComponent<Movement>();
-                if (movement != null)
-                {
-                    movement.enabled = false; // Tắt Movement
-                }
-                else
-                {
-                    Debug.LogWarning("Player does not have Movement component!");
-                }
+                player.GetComponent<Movement>().enabled = false;
             }
-            SaveLevelData();
+            levelDataManager.SaveLevelData(currentLevel, currentSeed, deathPosition, true);
         }
         // Hiển thị UI Restart/Resume (tùy bạn thiết kế)
     }
 
+
     // Gọi khi hoàn thành level
-    
     public void OnLevelComplete()
     {
         Debug.Log($"OnLevelComplete called - Level {currentLevel} completed");
         NextLevel();
-    }
-
-    private void SaveLevelData()
-    {
-        PlayerPrefs.SetInt("CurrentLevel", currentLevel);
-        if (currentLevel > 3) // Chỉ lưu seed và trạng thái cho procedural levels
-        {
-            PlayerPrefs.SetInt("CurrentSeed", currentSeed);
-            PlayerPrefs.SetFloat("PlayerX", lastPlayerPosition.x);
-            PlayerPrefs.SetFloat("PlayerY", lastPlayerPosition.y);
-            PlayerPrefs.SetFloat("PlayerZ", lastPlayerPosition.z);
-            PlayerPrefs.SetInt("IsDead", isDead ? 1 : 0);
-        }
-        PlayerPrefs.Save();
-    }
-
-    private void LoadLevelData()
-    {
-        currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
-        if (currentLevel > 3)
-        {
-            currentSeed = PlayerPrefs.GetInt("CurrentSeed", (int)System.DateTime.Now.Ticks);
-            lastPlayerPosition = new Vector3(
-                PlayerPrefs.GetFloat("PlayerX", 0f),
-                PlayerPrefs.GetFloat("PlayerY", 0f),
-                PlayerPrefs.GetFloat("PlayerZ", 0f)
-            );
-            isDead = PlayerPrefs.GetInt("IsDead", 0) == 1;
-        }
     }
 }

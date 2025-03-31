@@ -45,60 +45,66 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e6233bdd6d5d074aabb4fe4af64095a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelGenerator: {fileID: 7227210821474518849}
---- !u!1 &8107886340663348486
-GameObject:
+  levelGeneratorPrefab: {fileID: 0}
+--- !u!1001 &259755849838345508
+PrefabInstance:
   m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 197280791651351955}
-  - component: {fileID: 7227210821474518849}
-  m_Layer: 0
-  m_Name: LevelGenerator
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &197280791651351955
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8107886340663348486}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5779900131037785488}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7227210821474518849
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5779900131037785488}
+    m_Modifications:
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8295112896699609122, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+      propertyPath: m_Name
+      value: LevelGenerator
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+--- !u!4 &197280791651351955 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 82814408460550327, guid: 4e7c957d4cd0ee84288ba72109312aee, type: 3}
+  m_PrefabInstance: {fileID: 259755849838345508}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8107886340663348486}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: faf5af6db4ef5a04da0bfc599cec1693, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 8403704101045177804, guid: 79eb2b1b3b6ed054983e3428b723e540, type: 3}
-  goalPrefab: {fileID: 1771811055512104080, guid: 3374da9a2e291f340b18ef505ab5b49a, type: 3}
-  wallHorizontalPrefab: {fileID: 6229131993542968546, guid: 3c6a03e08d3b14b4fb652dafd039309f, type: 3}
-  wallVerticalPrefab: {fileID: 4697468895425825686, guid: 9392f6319a73d894dbb895b87622d527, type: 3}
-  rotatingDoorPrefab: {fileID: 3884720310151671806, guid: dd501fd8487b51942af9d5206a496924, type: 3}
-  laserTrapPrefab: {fileID: 338430005097063050, guid: 57665a1a4411f4840af1574d36e0655e, type: 3}
-  levelWidth: 30
-  levelHeight: 10
-  levelDepth: 0
-  minObstacles: 2
-  maxObstacles: 5
-  safeZoneRadius: 2
