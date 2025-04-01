@@ -7,15 +7,19 @@ using UnityEngine.SceneManagement;
 
 public class CollisionHandler : MonoBehaviour
 {
-    [SerializeField] float levelLoadDelay = 2f;
+    [SerializeField] float delay = 2f;
     [SerializeField] ParticleSystem successParticles;
     [SerializeField] ParticleSystem crashParticles;
 
-    private ILevelManager levelManager;
     private IAudioManager audioManager;
+    private ILevelManager levelManager;
     private CollisionFeedbackPlayer feedbackPlayer;
     private DebugHandler debugHandler;
+    private SkillHandler skillHandler;
+
     private bool isControllable = true;
+    private int health = 3;
+    private int coinsCollected = 0;
 
     private void Awake()
     {
@@ -23,6 +27,7 @@ public class CollisionHandler : MonoBehaviour
         audioManager = AudioManager.Instance;
         feedbackPlayer = new CollisionFeedbackPlayer(audioManager, successParticles, crashParticles);
         debugHandler = new DebugHandler(levelManager);
+        // skillHandler = gameObject.AddComponent<SkillHandler>();
     }
 
     void Update()
@@ -32,21 +37,44 @@ public class CollisionHandler : MonoBehaviour
 
     private void OnCollisionEnter(Collision other)
     {
-        Debug.Log("Collision detected with: " + other.gameObject.name + " at time: " + Time.time);
         if (!isControllable || !debugHandler.IsCollisionable()) return;
 
         switch (other.gameObject.tag)
         {
+            case "Start":
+                break;
             case "Friendly":
-                Debug.Log("This thing is friendly");
                 break;
             case "Finish":
                 StartSuccessSequence();
                 break;
+            case "SkillCircle":
+                skillHandler.ApplySkill(other.gameObject);
+                break;
             default:
                 StartCrashSequence();
                 break;
+        }       
+
+        ISegmentQuantity segment = other.gameObject.GetComponentInParent<ISegmentQuantity>();
+        if (segment != null)
+        {
+            coinsCollected += segment.GetCoins();
+            HUDManager.Instance.UpdateScore(coinsCollected);
+            if (!skillHandler.HasShield())
+            {
+                health -= skillHandler.HasPierce() ? 0 : segment.GetDamage();
+                if (health <= 0) StartCrashSequence();
+            }
         }
+    }
+
+    private void StartCrashSequence()
+    {
+        isControllable = false;
+        feedbackPlayer.PlayCrashFeedback();
+        GetComponent<Movement>().enabled = false;
+        Invoke("OnPlayerDeath", delay);
     }
 
     private void StartSuccessSequence()
@@ -54,25 +82,16 @@ public class CollisionHandler : MonoBehaviour
         isControllable = false;
         feedbackPlayer.PlaySuccessFeedback();
         GetComponent<Movement>().enabled = false;
-        Invoke("LoadNextLevel", levelLoadDelay);
+        Invoke("OnLevelComplete", delay);
     }
 
-    private void StartCrashSequence()
+    private void OnPlayerDeath()
     {
-        isControllable = false;
-        feedbackPlayer.PlayCrashFeedback();
         levelManager.OnPlayerDeath(transform.position);
-        GetComponent<Movement>().enabled = false;
-        Invoke("ReloadLevel", 2f);
     }
 
-    private void ReloadLevel()
-    {
-        levelManager.RestartLevel();
-    }
-
-    private void LoadNextLevel()
+    private void OnLevelComplete()
     {
         levelManager.OnLevelComplete();
     }
-}
+}    

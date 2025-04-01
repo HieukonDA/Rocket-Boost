@@ -1,157 +1,207 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class LevelGenerator : MonoBehaviour, ILevelGenerator
 {
     [SerializeField] private ObstacleConfig config;
-    [SerializeField] private float levelWidth = 30f;
+
+    [SerializeField] private int levelNumber = 1;
+    [SerializeField] private float spawnDistance = 45f;
+    [SerializeField] private float despawnDistance = 250f;
     [SerializeField] private float levelHeight = 10f;
-    [SerializeField] private float levelDepth = 0f;
-    [SerializeField] private int minObstacles = 2;
-    [SerializeField] private int maxObstacles = 5;
-    [SerializeField] private float safeZoneRadius = 2f;
 
-    private List<GameObject> spawnedObjects = new List<GameObject>();
-    private Vector3 startPos;
-    private Vector3 goalPos;
-    private float tunnelHeightBottom;
-
-    // Khởi tạo interface
-    private ISegmentGenerator IsegmentGenerator;
-    private IObstacleSpawner IobstacleSpawner;
-    private IPathChecker IpathChecker;
-    private ILevelVisualizer IlevelVisualizer;
+    private ObjectPool<GameObject> segmentPool;
+    private List<GameObject> activeSegments = new List<GameObject>();
+    private Transform player;
+    private GameObject launchSegmentInstance;
+    private int segmentsPerLevel;
+    private int spawnedSegmentCount;
+    private int currentLevel; // Lưu levelNumber từ LevelManager
+    private int currentSeed;
 
     private void Awake()
     {
-        IsegmentGenerator = new SegmentGenerator();
-        IobstacleSpawner = new ObstacleSpawner(config, transform, spawnedObjects, safeZoneRadius);
-        IpathChecker = new PathChecker();
-        IlevelVisualizer = new LevelVisualizer();
+        segmentPool = new ObjectPool<GameObject>(() => InstantiateMiddleSegment(), config.middleSegmentPrefabs.Length, transform);
+        segmentsPerLevel = CalculateSegmentsPerLevel(levelNumber);
+    }
+
+    private void Update()
+    {
+        if (player != null) // Chỉ chạy khi player đã được sinh
+        {
+            ManageSegments();
+        }
+    }
+
+    private void ManageSegments()
+    {
+        float playerX = player.position.x;
+        Transform lastSpawnPoint = GetLastSpawnPoint();
+
+        if (spawnedSegmentCount < segmentsPerLevel && lastSpawnPoint.position.x < playerX + spawnDistance)
+        {
+            if (spawnedSegmentCount == segmentsPerLevel - 1)
+            {
+                SpawnFinishSegment(lastSpawnPoint);
+            }
+            else
+            {
+                SpawnNextMiddleSegment(lastSpawnPoint);
+            }
+        }
+
+        for (int i = activeSegments.Count - 1; i >= 0; i--)
+        {
+            if (activeSegments[i].transform.position.x < playerX - despawnDistance)
+            {
+                segmentPool.Return(activeSegments[i]);
+                activeSegments.RemoveAt(i);
+            }
+        }
     }
 
     public void GenerateLevel(int levelNumber, int seed)
     {
-        Debug.Log("GenerateLevel is created");
-        ClearLevel();
+        currentLevel = levelNumber; // Level 1 = Level 4 trong LevelManager
+        currentSeed = seed;
+        segmentsPerLevel = CalculateSegmentsPerLevel(levelNumber);
 
-        // Khóa chuỗi ngẫu nhiên bằng seed
-        UnityEngine.Random.InitState(seed);
+        CleanupExistingLevel(); // Xóa các đoạn cũ và player cũ nếu có
 
-        // Tính số vật cản dựa trên level
-        int obstacleCount = Mathf.RoundToInt(Mathf.Lerp(minObstacles, maxObstacles, levelNumber / 10f));
-        obstacleCount = Mathf.Clamp(obstacleCount, minObstacles, maxObstacles);
+        spawnedSegmentCount = 0;
+        activeSegments.Clear();
 
-        // Chia level thành các đoạn
-        List<Segment> segments = IsegmentGenerator.GenerateSegments(levelNumber, levelWidth, levelHeight, levelDepth);
+        Random.InitState(seed); // Khởi tạo seed từ LevelManager
+        SpawnLaunchSegment(); // Sinh đoạn launch
+        SpawnPlayer(); // Sinh player trong scene procedural
+    }
 
-        // Lấy độ cao sàn đường hầm từ đoạn đầu tiên
-        tunnelHeightBottom = UnityEngine.Random.Range(0f, levelHeight * 0.2f); // Sàn đường hầm (0%-30% chiều cao)
-
-        // Điều chỉnh startPos và goalPos để nằm trên sàn
-        startPos = segments[0].start;
-        startPos.y = tunnelHeightBottom;
-        goalPos = segments[segments.Count - 1].end;
-        goalPos.y = tunnelHeightBottom;
-
-        // Tính offset dựa trên chiều cao của các đối tượng (nếu cần)
-        float startHeight = GetObjectHeight(config.startPrefab);
-        float goalHeight = GetObjectHeight(config.goalPrefab);
-        float playerHeight = GetObjectHeight(config.playerPrefab);
-
-        // Điều chỉnh y để phần dưới của đối tượng nằm trên sàn
-        startPos.y += startHeight / 2f;
-        goalPos.y += goalHeight / 2f;
-
-        // Đặt điểm xuất phát và hạ cánh
-        GameObject startInstance = Instantiate(config.startPrefab, Vector3.zero, Quaternion.identity, transform);
-        GameObject playerInstance = Instantiate(config.playerPrefab, startPos, Quaternion.identity, transform);
-        GameObject goal = Instantiate(config.goalPrefab, goalPos, Quaternion.identity, transform);
-        startInstance.transform.position = new Vector3(
-            startInstance.transform.position.x,
-            startPos.y + playerHeight / 2f + 20f,
-            startInstance.transform.position.z
-        );
-        playerInstance.transform.position = startInstance.transform.position;
-        goal.transform.position = new Vector3(
-            goal.transform.position.x,
-            goalPos.y + playerHeight / 2f + 20f,
-            goalPos.z
-        );
-        Debug.Log("playerInstance spawned: " + (playerInstance != null ? playerInstance.name : "Null"));
-
-
-        // Kiểm tra config có được gán không
-        Debug.Log("Config: " + (config != null ? "Assigned" : "Null"));
-
-        // Lưu các instance vào spawnedObjects
-        spawnedObjects.Add(goal);
-        spawnedObjects.Add(startInstance);
-        spawnedObjects.Add(playerInstance);
-
-        Debug.Log("Created: " + playerInstance.name + " with tag: " + playerInstance.tag);
-
-        // Sinh vật cản cho từng đoạn
-        foreach (Segment segment in segments)
+    private void CleanupExistingLevel()
+    {
+        // Xóa player cũ nếu có
+        if (player != null)
         {
-            // Bước 1: Sinh tường ngang liên tục để tạo đường hầm
-            IobstacleSpawner.SpawnTunnelWalls(segment, levelHeight, tunnelHeightBottom);
+            Destroy(player.gameObject);
+            player = null;
+        }
 
-            // Bước 2: Sinh các vật cản khác (tường dọc, bẫy laser, v.v.)
-            int additionalObstacles = obstacleCount / segments.Count;
-            int attempts = 0;
-            int maxAttempts = 20;
-            for (int i = 0; i < additionalObstacles && attempts < maxAttempts; i++)
+        // Xóa các đoạn không pooled (launch và finish)
+        foreach (GameObject segment in activeSegments)
+        {
+            if (!segmentPool.Contains(segment)) // Chỉ xóa nếu không thuộc pool
             {
-                if (IobstacleSpawner.SpawnAdditionalObstacle(segment, levelHeight))
-                {
-                    if (!IpathChecker.IsPathClear(segment.start, segment.end, levelHeight, levelDepth))
-                    {
-                        Destroy(spawnedObjects[spawnedObjects.Count - 1]);
-                        spawnedObjects.RemoveAt(spawnedObjects.Count - 1);
-                        i--;
-                    }
-                }
-                attempts++;
+                Debug.Log("Destroying non-pooled segment: " + segment.name);
+                Destroy(segment);
+            }
+            else
+            {
+                segmentPool.Return(segment); // Trả về pool nếu là đoạn giữa
             }
         }
+        activeSegments.Clear();
+        launchSegmentInstance = null;
 
-        IlevelVisualizer.VisualizeSegments(segments);
-        Debug.Log($"Generated Level {levelNumber} with Seed {seed} and {spawnedObjects.Count - 1} obstacles");
+        // Kiểm tra chắc chắn không còn đoạn đầu nào trong scene
+        GameObject existingLaunch = GameObject.Find("LaunchSegment(Clone)"); // Tên mặc định khi instantiate
+        if (existingLaunch != null)
+        {
+            Debug.LogWarning("Found leftover launch segment in scene! Destroying it.");
+            Destroy(existingLaunch);
+        }
     }
 
-    private float GetObjectHeight(GameObject prefab)
+    private void SpawnLaunchSegment()
     {
-        // Lấy chiều cao của đối tượng dựa trên Renderer hoặc Collider
-        Renderer renderer = prefab.GetComponentInChildren<Renderer>();
-        if (renderer != null)
+        if (launchSegmentInstance != null)
         {
-            return renderer.bounds.size.y;
+            Debug.LogWarning("Launch segment already exists! Skipping spawn.");
+            return; // Ngăn sinh lần thứ hai
         }
 
-        Collider collider = prefab.GetComponentInChildren<Collider>();
-        if (collider != null)
+        launchSegmentInstance = Instantiate(config.launchSegmentPrefab, Vector3.zero, Quaternion.identity, transform);
+        launchSegmentInstance.SetActive(true);
+        activeSegments.Add(launchSegmentInstance);
+        spawnedSegmentCount++;
+    }
+
+    private void SpawnNextMiddleSegment(Transform previousSpawnPoint)
+    {
+        GameObject segment = segmentPool.Get();
+        segment.transform.position = previousSpawnPoint.position;
+        segment.transform.rotation = previousSpawnPoint.rotation;
+        segment.SetActive(true);
+        activeSegments.Add(segment);
+        spawnedSegmentCount++;
+    }
+
+    private void SpawnFinishSegment(Transform previousSpawnPoint)
+    {
+        GameObject finishSegment = Instantiate(config.finishSegmentPrefab, previousSpawnPoint.position, previousSpawnPoint.rotation, transform);
+        finishSegment.SetActive(true);
+        activeSegments.Add(finishSegment);
+        spawnedSegmentCount++;
+
+        // if (currentLevel % 5 == 0)
+        // {
+        //     SpawnSkillCircle(finishSegment.transform);
+        // }
+    }
+
+    private Transform GetLastSpawnPoint()
+    {
+        GameObject lastSegment = activeSegments[activeSegments.Count - 1];
+        return lastSegment.transform.Find("SpawnPoint");
+    }
+
+    private GameObject InstantiateMiddleSegment()
+    {
+        int index = Random.Range(0, config.middleSegmentPrefabs.Length); // Luôn ngẫu nhiên vì seed đã được set
+        GameObject segment = Instantiate(config.middleSegmentPrefabs[index], Vector3.zero, Quaternion.identity);
+        segment.SetActive(false);
+        return segment;
+    }
+
+    private void SpawnPlayer()
+    {
+        if (launchSegmentInstance == null)
         {
-            return collider.bounds.size.y;
+            Debug.LogError("Launch segment not spawned yet!");
+            return;
         }
 
-        // Nếu không tìm thấy Renderer hoặc Collider, trả về giá trị mặc định
-        return 1f;
-    }
-
-    private void ClearLevel()
-    {
-        foreach (GameObject obj in spawnedObjects)
+        // Tìm child "Launch" trong đoạn đầu
+        Transform launchPos = launchSegmentInstance.transform.Find("Launch");
+        if (launchPos == null)
         {
-            if (obj != null) Destroy(obj);
+            Debug.LogWarning("Child 'Launch' not found in launchSegmentPrefab, using SpawnPoint instead.");
+            launchPos = launchSegmentInstance.transform.Find("SpawnPoint"); // Fallback nếu không có "Launch"
         }
-        spawnedObjects.Clear();
-        Debug.Log("Cleared Level");
+
+        if (launchPos == null)
+        {
+            Debug.LogError("No 'Launch' or 'SpawnPoint' found in launchSegmentPrefab! Spawning at default position.");
+            launchPos = launchSegmentInstance.transform; // Dùng vị trí gốc của đoạn đầu nếu không tìm thấy
+        }
+
+        Vector3 spawnPosition = launchPos.position;
+        GameObject playerInstance = Instantiate(config.playerPrefab, spawnPosition + new Vector3(0,5,0), Quaternion.identity, transform);
+        playerInstance.tag = "Player";
+        player = playerInstance.transform;
+        FindFirstObjectByType<CameraManager>()?.SetTarget(player); // Camera sẽ được set trong OnSceneLoaded, nhưng để chắc chắn
+        Debug.LogError("Player spawned: " + playerInstance.name);
     }
 
-    private void OnDestroy()
+    private void SpawnSkillCircle(Transform segment)
     {
-        ClearLevel();
+        GameObject skillCircle = Instantiate(config.skillCirclePrefab, segment);
+        skillCircle.transform.localPosition = new Vector3(15f, levelHeight / 2, 0);
     }
+
+    private int CalculateSegmentsPerLevel(int level)
+    {
+        return level + 2;
+    }
+
 }
 

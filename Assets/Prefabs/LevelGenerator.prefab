@@ -44,10 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faf5af6db4ef5a04da0bfc599cec1693, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  config: {fileID: 11400000, guid: 039965a7f8cfb434abd051e71335b0e9, type: 2}
-  levelWidth: 100
+  config: {fileID: 11400000, guid: 471b1bf6e6c2a1448a9d964ddc9e8e04, type: 2}
+  levelNumber: 1
+  spawnDistance: 45
+  despawnDistance: 90
   levelHeight: 30
-  levelDepth: 0
-  minObstacles: 2
-  maxObstacles: 5
-  safeZoneRadius: 2

@@ -4,10 +4,8 @@ using UnityEngine;
 public class ObstacleConfig : ScriptableObject
 {
     public GameObject playerPrefab;
-    public GameObject startPrefab;
-    public GameObject goalPrefab;
-    public GameObject wallHorizontalPrefab;
-    public GameObject wallVerticalPrefab;
-    public GameObject rotatingDoorPrefab;
-    public GameObject laserTrapPrefab;
+    public GameObject launchSegmentPrefab; // Đoạn đầu cố định
+    public GameObject finishSegmentPrefab; // Đoạn cuối cố định
+    public GameObject[] middleSegmentPrefabs; // Các đoạn giữa ngẫu nhiên
+    public GameObject skillCirclePrefab;
 }

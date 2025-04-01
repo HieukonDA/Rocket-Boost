@@ -6,12 +6,15 @@ using UnityEngine.UI;
 public class MainUI : MonoBehaviour
 {
     public static MainUI Instance { get; private set; }
-
     [SerializeField] private Slider musicSetting;
     [SerializeField] private Slider sfxSetting;
+    [SerializeField] private Text finalScoreText;
     private Transform setting;
     private Transform settingPanel;
+    private Transform gameOverPanel;
     private Transform X_button;
+    private Transform restartButton;
+
 
     private AudioManager audioManager;
     private EventSystemManager eventSystemManager;
@@ -32,15 +35,19 @@ public class MainUI : MonoBehaviour
         eventSystemManager = new EventSystemManager(gameObject);
     }
 
-    void Start()
+    private void Start()
     {
         setting = transform.Find("SettingButton");
+        gameOverPanel = transform.Find("GameOverPanel");
+        restartButton = gameOverPanel.Find("RestartButton");
         settingPanel = transform.Find("SettingPanel");
         X_button = settingPanel.Find("X_button");
 
         Button settingButton = setting.GetComponent<Button>();
         Button XButton = X_button.GetComponent<Button>();
+        Button restartBtn = restartButton.GetComponent<Button>();
 
+        restartBtn.onClick.AddListener(OnRestartButton);
         XButton.onClick.AddListener(XButtonClicked);
         settingButton.onClick.AddListener(SettingButtonClicked);
         musicSetting.onValueChanged.AddListener((float value) => audioManager.SetMusicVolume(value));
@@ -61,8 +68,17 @@ public class MainUI : MonoBehaviour
         Debug.Log("X Button clicked - Attempting to play ClickButton");
     }
 
+    public void ShowGameOver(int score)
+    {
+        gameOverPanel.gameObject.SetActive(true);
+        finalScoreText.text = score > 0 ? $"Level Complete! Coins: {score}" : "Game Over!";
+    }
 
-
-    
+    public void OnRestartButton()
+    {
+        gameOverPanel.gameObject.SetActive(false);
+        audioManager.PlaySoundButton();
+        LevelManager.Instance.RestartLevel();
+    }
 
 }

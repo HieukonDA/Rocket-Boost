@@ -14,11 +14,9 @@ public class LevelManager : MonoBehaviour, ILevelManager
     private ICameraManager IcameraManager;
     private LevelDataManager levelDataManager;
 
-    // các thông số cơ bản như seed , tham chiếu đến vị trí player
-    private int currentLevel = 1;
+    private int currentLevel = 1; // Mặc định là 0, sẽ được cập nhật khi load level
     private int currentSeed; 
-    private Transform playerTransform; 
-
+    private Transform playerTransform;
 
     private void Awake()
     {
@@ -43,8 +41,6 @@ public class LevelManager : MonoBehaviour, ILevelManager
         levelDataManager.SetLastPlayerPosition(lastPlayerPosition);
         levelDataManager.SetIsDead(isDead);
 
-        Debug.Log($"CurrentLevel: {PlayerPrefs.GetInt("CurrentLevel", 1)}");
-
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
@@ -63,21 +59,6 @@ public class LevelManager : MonoBehaviour, ILevelManager
             else
             {
                 playerTransform = null;
-            }
-        }
-    }
-
-    private void Update()
-    {
-        // Chỉ tìm và gán Player trong Generator scene
-        if (currentLevel > 3 && (playerTransform == null || playerTransform.gameObject == null))
-        {
-            GameObject player = GameObject.FindWithTag("Player");
-            if (player != null)
-            {
-                playerTransform = player.transform;
-                playerTransform.GetComponent<Movement>().enabled = !levelDataManager.GetIsDead();
-                IcameraManager?.SetTarget(playerTransform);
             }
         }
     }
@@ -105,7 +86,6 @@ public class LevelManager : MonoBehaviour, ILevelManager
         Debug.Log($"Loading Level {currentLevel}");
     }
 
-    
     private void GenerateProceduralLevel()
     {
         if (IlevelGenerator == null)
@@ -135,7 +115,6 @@ public class LevelManager : MonoBehaviour, ILevelManager
         levelDataManager.SaveLevelData(currentLevel, currentSeed, levelDataManager.GetLastPlayerPosition(), levelDataManager.GetIsDead());
     }
 
-    
     public void RestartLevel()
     {
         Debug.Log("RestartLevel called at time: " + Time.time);
@@ -151,7 +130,6 @@ public class LevelManager : MonoBehaviour, ILevelManager
         }
     }
 
-    
     public void ResumeFromDeath()
     {
         if (currentLevel <= 3)
@@ -164,7 +142,23 @@ public class LevelManager : MonoBehaviour, ILevelManager
         }
     }
 
-    
+    public void OnPlayerDeath(Vector3 deathPosition)
+    {
+        if (currentLevel > 3)
+        {
+            levelDataManager.SetIsDead(true);
+            levelDataManager.SetLastPlayerPosition(deathPosition);
+            GameObject player = GameObject.FindWithTag("Player");
+            if (player != null)
+            {
+                player.GetComponent<Movement>().enabled = false;
+            }
+            levelDataManager.SaveLevelData(currentLevel, currentSeed, deathPosition, true);
+            
+        }
+        MainUI.Instance.ShowGameOver(HUDManager.Instance.GetScore());
+    }
+
     public void NextLevel()
     {
         Debug.Log($"NextLevel called - Moving from Level {currentLevel} to {currentLevel + 1}");
@@ -178,25 +172,6 @@ public class LevelManager : MonoBehaviour, ILevelManager
         LoadLevel();
     }
 
-    // Gọi khi người chơi chết
-    public void OnPlayerDeath(Vector3 deathPosition)
-    {
-        if (currentLevel > 3)
-        {
-            levelDataManager.SetIsDead(true);
-            levelDataManager.SetLastPlayerPosition(deathPosition);
-            GameObject player = GameObject.FindWithTag("Player");
-            if (player != null)
-            {
-                player.GetComponent<Movement>().enabled = false;
-            }
-            levelDataManager.SaveLevelData(currentLevel, currentSeed, deathPosition, true);
-        }
-        // Hiển thị UI Restart/Resume (tùy bạn thiết kế)
-    }
-
-
-    // Gọi khi hoàn thành level
     public void OnLevelComplete()
     {
         Debug.Log($"OnLevelComplete called - Level {currentLevel} completed");

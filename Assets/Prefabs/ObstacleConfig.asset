@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 597207c719f5b2a42bdde46646ab2bf6, type: 3}
+  m_Name: ObstacleConfig
+  m_EditorClassIdentifier: 
+  playerPrefab: {fileID: 8403704101045177804, guid: 79eb2b1b3b6ed054983e3428b723e540, type: 3}
+  launchSegmentPrefab: {fileID: 8335308875460315354, guid: 9b5299288be639141a80a4fa4e216336, type: 3}
+  finishSegmentPrefab: {fileID: 2798372299876072330, guid: cdf658114a491cf4fb62d27395f0842f, type: 3}
+  middleSegmentPrefabs:
+  - {fileID: 6704938984466383013, guid: 6ffe195eb9d620249a097b7e4be30a63, type: 3}
+  - {fileID: 2662480283725594611, guid: 182bbb34c7703634cb49a5ab02b73db5, type: 3}
+  - {fileID: 2662480283725594611, guid: 182bbb34c7703634cb49a5ab02b73db5, type: 3}
+  - {fileID: 8983940633643475134, guid: 85707de2c2c57154092debf0a355ca13, type: 3}
+  - {fileID: 5072985044530614217, guid: 83fcab8c713ca494d8e27e973064d7cc, type: 3}
+  - {fileID: 6451664004613239682, guid: 45654646ab0c1c24994cff340f1e0555, type: 3}
+  skillCirclePrefab: {fileID: 919132149155446097, guid: 2d2baf9e37e36e045abf18859d4bb082, type: 3}
