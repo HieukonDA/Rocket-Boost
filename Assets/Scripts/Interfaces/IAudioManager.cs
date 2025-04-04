@@ -8,4 +8,5 @@ public interface IAudioManager
     void SetSFXVolume(float volume);
     bool IsSoundPlaying();
     void PlaySoundButton();
+    void PlaySoundCoin();
 }

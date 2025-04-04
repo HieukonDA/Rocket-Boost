@@ -17,6 +17,7 @@ public class AudioManager : MonoBehaviour, IAudioManager
     [SerializeField] private List<Sound> sounds;
     [SerializeField] private AudioSource audioSourceMusic;
     [SerializeField] private AudioSource audioSourceButton;
+    [SerializeField] private AudioSource audioSourceCoin;
     [SerializeField] private int sfxSourceCount = 5;
     
     private SFXPlayer sfxPlayer;
@@ -109,4 +110,8 @@ public class AudioManager : MonoBehaviour, IAudioManager
         audioSourceButton.PlayOneShot(audioSourceButton.clip);
     }
 
+    public void PlaySoundCoin()
+    {
+        audioSourceCoin.PlayOneShot(audioSourceCoin.clip);
+    }
 }

@@ -71,12 +71,14 @@ public class MainUI : MonoBehaviour
     public void ShowGameOver(int score)
     {
         gameOverPanel.gameObject.SetActive(true);
-        finalScoreText.text = score > 0 ? $"Level Complete! Coins: {score}" : "Game Over!";
+        finalScoreText.text = score.ToString(); // Cập nhật điểm cuối
+        HUDManager.Instance.ControllActiveScoreText(false); // Ẩn HUD
     }
 
     public void OnRestartButton()
     {
         gameOverPanel.gameObject.SetActive(false);
+        HUDManager.Instance.gameObject.SetActive(true); // Hiện lại HUD
         audioManager.PlaySoundButton();
         LevelManager.Instance.RestartLevel();
     }

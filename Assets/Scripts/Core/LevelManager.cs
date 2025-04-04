@@ -115,20 +115,23 @@ public class LevelManager : MonoBehaviour, ILevelManager
         levelDataManager.SaveLevelData(currentLevel, currentSeed, levelDataManager.GetLastPlayerPosition(), levelDataManager.GetIsDead());
     }
 
-    public void RestartLevel()
-    {
-        Debug.Log("RestartLevel called at time: " + Time.time);
-        if (currentLevel <= 3)
+        public void RestartLevel()
         {
-            LoadLevel(); // Reload scene tĩnh
+            Debug.Log("RestartLevel called at time: " + Time.time);
+            if (currentLevel <= 3)
+            {
+                LoadLevel(); // Reload scene tĩnh
+            }
+            else
+            {
+                GenerateProceduralLevel(); // Tái tạo level với seed hiện tại
+                levelDataManager.SetLastPlayerPosition(Vector3.zero);
+                levelDataManager.SetIsDead(false);
+                HUDManager.Instance?.ControllActiveScoreText(true);
+                CoinManager.Instance.ResetCoinCount();
+                HUDManager.Instance.UpdateScore(0);
+            }
         }
-        else
-        {
-            GenerateProceduralLevel(); // Tái tạo level với seed hiện tại
-            levelDataManager.SetLastPlayerPosition(Vector3.zero);
-            levelDataManager.SetIsDead(false);
-        }
-    }
 
     public void ResumeFromDeath()
     {

@@ -1,12 +1,15 @@
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UI;
 
 public class HUDManager : MonoBehaviour
 {
-   public static HUDManager Instance { get; private set; }
+    public static HUDManager Instance { get; private set; }
     [SerializeField] private Text scoreText;
+    [SerializeField] private GameObject scoreTextHUB; // Prefab cho ScoreHUB
 
-    private int score;
+    private int finalScoreText = 0;
+    private int coinCount;
 
     private void Awake()
     {
@@ -15,11 +18,26 @@ public class HUDManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void UpdateScore(int newScore)
+    public void UpdateScore(int newcoinCount)
     {
-        score = newScore;
-        scoreText.text = $"Coins: {score}";
+        coinCount = newcoinCount;
+        scoreText.text = $"Coins: {newcoinCount}";
     }
 
-    public int GetScore() => score;
+    public void ControllActiveScoreText(bool isActive)
+    {
+        if (scoreTextHUB == null)
+        {
+            Debug.LogError("ScoreHUB not found in the scene.");
+            return;
+        }
+
+        scoreTextHUB.SetActive(isActive);
+    }
+
+    public int GetScore()
+    {
+        finalScoreText += coinCount;
+        return finalScoreText;
+    }
 }

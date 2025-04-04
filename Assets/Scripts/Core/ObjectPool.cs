@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ObjectPool<T>
+public class ObjectPool<T> where T : class
 {
     private readonly Func<T> factoryMethod;
     private readonly Queue<T> pool = new Queue<T>();
@@ -46,6 +46,19 @@ public class ObjectPool<T>
     public bool Contains(T obj)
     {
         return allObjects.Contains(obj); // Kiểm tra xem obj có trong tất cả object không
+    }
+
+    public IEnumerable<T> GetActiveObjects()
+    {
+        List<T> activeObjects = new List<T>();
+        foreach (Transform child in parent)
+        {
+            if (child.gameObject.activeSelf && child.CompareTag("Coin"))
+            {
+                activeObjects.Add(child.gameObject as T);
+            }
+        }
+        return activeObjects;
     }
 
     public int CountInactive => pool.Count;

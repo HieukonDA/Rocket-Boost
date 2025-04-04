@@ -26,4 +26,10 @@ public class CollisionFeedbackPlayer
         audioManager.PlaySound("crash");
         crashParticles.Play();
     }
+
+    public void PlayCoinFeedback()
+    {
+        Debug.Log("PlayCoinFeedback: Playing coin sound.");
+        audioManager.PlaySoundCoin();
+    }
 }

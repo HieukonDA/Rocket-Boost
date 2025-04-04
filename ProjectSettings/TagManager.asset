@@ -7,6 +7,9 @@ TagManager:
   - Friendly
   - Finished
   - Fuel
+  - Start
+  - CoinPoint
+  - Coin
   layers:
   - Default
   - TransparentFX

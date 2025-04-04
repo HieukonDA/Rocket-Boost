@@ -16,10 +16,10 @@ public class CollisionHandler : MonoBehaviour
     private CollisionFeedbackPlayer feedbackPlayer;
     private DebugHandler debugHandler;
     private SkillHandler skillHandler;
+    private CoinManager coinManager;
 
     private bool isControllable = true;
     private int health = 3;
-    private int coinsCollected = 0;
 
     private void Awake()
     {
@@ -28,6 +28,7 @@ public class CollisionHandler : MonoBehaviour
         feedbackPlayer = new CollisionFeedbackPlayer(audioManager, successParticles, crashParticles);
         debugHandler = new DebugHandler(levelManager);
         // skillHandler = gameObject.AddComponent<SkillHandler>();
+        coinManager = CoinManager.Instance; // Lấy CoinManager từ scene
     }
 
     void Update()
@@ -48,24 +49,47 @@ public class CollisionHandler : MonoBehaviour
             case "Finish":
                 StartSuccessSequence();
                 break;
-            case "SkillCircle":
-                skillHandler.ApplySkill(other.gameObject);
-                break;
             default:
                 StartCrashSequence();
                 break;
-        }       
+        }
 
-        ISegmentQuantity segment = other.gameObject.GetComponentInParent<ISegmentQuantity>();
-        if (segment != null)
+        // ISegmentQuantity segment = other.gameObject.GetComponentInParent<ISegmentQuantity>();
+        // if (segment != null)
+        // {
+        //     coinsCollected += segment.GetCoins();
+        //     HUDManager.Instance.UpdateScore(coinsCollected);
+        //     if (!skillHandler.HasShield())
+        //     {
+        //         health -= skillHandler.HasPierce() ? 0 : segment.GetDamage();
+        //         if (health <= 0) StartCrashSequence();
+        //     }
+        // }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!isControllable || !debugHandler.IsCollisionable()) return;
+
+        switch (other.gameObject.tag)
         {
-            coinsCollected += segment.GetCoins();
-            HUDManager.Instance.UpdateScore(coinsCollected);
-            if (!skillHandler.HasShield())
-            {
-                health -= skillHandler.HasPierce() ? 0 : segment.GetDamage();
-                if (health <= 0) StartCrashSequence();
-            }
+            case "Coin":
+                HandleCoinCollection(other.gameObject);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void HandleCoinCollection(GameObject coin)
+    {
+        if (coin.activeSelf)
+        {
+            coin.SetActive(false);
+            feedbackPlayer.PlayCoinFeedback();
+            CoinManager.Instance.CollectCoin(); // Tăng coinCount trong CoinManager
+            HUDManager.Instance.UpdateScore(CoinManager.Instance.GetCoinCount()); // Lấy từ CoinManager
+            Debug.Log($"CollisionHandler: Coin collected at {coin.transform.position}. Total coins: {CoinManager.Instance.GetCoinCount()}");
         }
     }
 
@@ -94,4 +118,4 @@ public class CollisionHandler : MonoBehaviour
     {
         levelManager.OnLevelComplete();
     }
-}    
+}

@@ -15,6 +15,9 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
     private List<GameObject> activeSegments = new List<GameObject>();
     private Transform player;
     private GameObject launchSegmentInstance;
+    private ICoinManager coinManager; // Thêm CoinManager vào đây
+    // private SkillManager skillManager; // Thêm SkillManager vào đây
+
     private int segmentsPerLevel;
     private int spawnedSegmentCount;
     private int currentLevel; // Lưu levelNumber từ LevelManager
@@ -24,6 +27,7 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
     {
         segmentPool = new ObjectPool<GameObject>(() => InstantiateMiddleSegment(), config.middleSegmentPrefabs.Length, transform);
         segmentsPerLevel = CalculateSegmentsPerLevel(levelNumber);
+        coinManager = CoinManager.Instance; // Lấy CoinManager từ scene
     }
 
     private void Update()
@@ -102,6 +106,17 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
         activeSegments.Clear();
         launchSegmentInstance = null;
 
+        // Deactive tất cả coin trước khi sinh level mới
+        if (coinManager != null)
+        {
+            coinManager.CleanupExistingCoin();
+            Debug.Log("LevelGenerator: Deactivated all coins before cleanup.");
+        }
+        else
+        {
+            Debug.LogWarning("LevelGenerator: coinManager is null during cleanup!");
+        }
+
         // Kiểm tra chắc chắn không còn đoạn đầu nào trong scene
         GameObject existingLaunch = GameObject.Find("LaunchSegment(Clone)"); // Tên mặc định khi instantiate
         if (existingLaunch != null)
@@ -123,6 +138,8 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
         launchSegmentInstance.SetActive(true);
         activeSegments.Add(launchSegmentInstance);
         spawnedSegmentCount++;
+
+        coinManager?.SpawnCoins(launchSegmentInstance.transform);
     }
 
     private void SpawnNextMiddleSegment(Transform previousSpawnPoint)
@@ -133,6 +150,9 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
         segment.SetActive(true);
         activeSegments.Add(segment);
         spawnedSegmentCount++;
+
+       coinManager?.SpawnCoins(segment.transform);
+        // skillManager?.SpawnSkill(segment.transform, 5, levelHeight);
     }
 
     private void SpawnFinishSegment(Transform previousSpawnPoint)
@@ -142,10 +162,7 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
         activeSegments.Add(finishSegment);
         spawnedSegmentCount++;
 
-        // if (currentLevel % 5 == 0)
-        // {
-        //     SpawnSkillCircle(finishSegment.transform);
-        // }
+       coinManager?.SpawnCoins(finishSegment.transform);
     }
 
     private Transform GetLastSpawnPoint()
