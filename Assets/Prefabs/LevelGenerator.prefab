@@ -49,3 +49,4 @@ MonoBehaviour:
   spawnDistance: 45
   despawnDistance: 90
   levelHeight: 30
+  skillCirclePrefab: {fileID: 4591003520877846565, guid: 94f0a32ad497f004eab5da04e50670f1, type: 3}

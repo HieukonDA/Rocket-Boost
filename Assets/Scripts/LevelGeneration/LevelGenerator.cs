@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -11,12 +12,15 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
     [SerializeField] private float despawnDistance = 250f;
     [SerializeField] private float levelHeight = 10f;
 
+    //prefab cuar skill 
+    [SerializeField] private GameObject skillCirclePrefab;
+
     private ObjectPool<GameObject> segmentPool;
     private List<GameObject> activeSegments = new List<GameObject>();
     private Transform player;
     private GameObject launchSegmentInstance;
     private ICoinManager coinManager; // Thêm CoinManager vào đây
-    // private SkillManager skillManager; // Thêm SkillManager vào đây
+    private SkillGenerator skillGenerator;
 
     private int segmentsPerLevel;
     private int spawnedSegmentCount;
@@ -28,6 +32,7 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
         segmentPool = new ObjectPool<GameObject>(() => InstantiateMiddleSegment(), config.middleSegmentPrefabs.Length, transform);
         segmentsPerLevel = CalculateSegmentsPerLevel(levelNumber);
         coinManager = CoinManager.Instance; // Lấy CoinManager từ scene
+        skillGenerator = new SkillGenerator(skillCirclePrefab, coinManager); // Khởi tạo SkillGenerator
     }
 
     private void Update()
@@ -75,6 +80,8 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
 
         spawnedSegmentCount = 0;
         activeSegments.Clear();
+
+        skillGenerator.ResetSkillCount(); // Reset số lượng skill đã sinh
 
         Random.InitState(seed); // Khởi tạo seed từ LevelManager
         SpawnLaunchSegment(); // Sinh đoạn launch
@@ -151,8 +158,10 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
         activeSegments.Add(segment);
         spawnedSegmentCount++;
 
-       coinManager?.SpawnCoins(segment.transform);
-        // skillManager?.SpawnSkill(segment.transform, 5, levelHeight);
+        coinManager?.SpawnCoins(segment.transform);
+        
+        // Sinh skill circle tại segment chia hết cho 5
+        skillGenerator.TrySpawnSkill(segment, spawnedSegmentCount);
     }
 
     private void SpawnFinishSegment(Transform previousSpawnPoint)

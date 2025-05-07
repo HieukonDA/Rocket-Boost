@@ -99,4 +99,15 @@ public class CoinManager : MonoBehaviour, ICoinManager
         Debug.Log("CoinManager: Coin count reset to 0.");
     }
 
+    public GameObject FindCoinAtPosition(Vector3 position)
+    {
+        foreach (GameObject coin in coinPool.GetActiveObjects())
+        {
+            if (coin.activeSelf && Vector3.Distance(coin.transform.position, position) < 0.01f)
+            {
+                return coin; // Tìm thấy coin active tại vị trí
+            }
+        }
+        return null; // Không tìm thấy
+    }
 }

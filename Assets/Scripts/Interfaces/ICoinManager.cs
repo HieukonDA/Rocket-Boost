@@ -7,4 +7,5 @@ public interface ICoinManager
     void CollectCoin();
     int GetCoinCount();
     void CleanupExistingCoin();
+    GameObject FindCoinAtPosition(Vector3 position);
 }

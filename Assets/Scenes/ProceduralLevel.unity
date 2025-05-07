@@ -410,9 +410,75 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!1 &1838548700
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1838548702}
+  - component: {fileID: 1838548701}
+  m_Layer: 0
+  m_Name: BackgroundManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1838548701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1838548700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23b59cd20eb9c7f4f8f0ca0a4c77a9f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  backgroundPrefabs:
+  - {fileID: 659545638160189617, guid: 749395114a39e98458bbfc011e1770c7, type: 3}
+  - {fileID: 8659068851401411951, guid: c94a57530981bef4eafe9576957bbdd5, type: 3}
+  - {fileID: 7268119945545756370, guid: 0fa93a9794e138f4dbb9e3867c637c28, type: 3}
+  - {fileID: 2800277552334906505, guid: 17169ce1b9483a34da52af19e2c631f3, type: 3}
+  - {fileID: 5556735837981724153, guid: 157ec8f0e1a2541478e2ef4c3f8c464d, type: 3}
+  - {fileID: 2677052341410741384, guid: 62520815618293f40bc59f31c3ca7875, type: 3}
+  - {fileID: 4748159703526661113, guid: 7697242d5374e7747a215adfe42338d5, type: 3}
+  - {fileID: 3644410253943073975, guid: 678bf5e329f2f844aaef49ea347cc18a, type: 3}
+  - {fileID: 2125979423594021677, guid: 2e6064bb49059b74ca75b58d243c7b19, type: 3}
+  - {fileID: 2125979423594021677, guid: 2e6064bb49059b74ca75b58d243c7b19, type: 3}
+  - {fileID: 2142388692742308826, guid: 87a59592b9b73a64bb36f8cbbc9dc88c, type: 3}
+  - {fileID: 3311377298651376633, guid: f977437ccc4fb9b47a226a681e7af22a, type: 3}
+  - {fileID: 7276845827090402040, guid: 0a7b5bc55ca343446b13adee260b77b1, type: 3}
+  - {fileID: 6377132192911110809, guid: 886c890d891326240ae2c6e8a314d52c, type: 3}
+  spawnDistance: 50
+  despawnDistance: 100
+  backgroundDepth: 10
+  moveSpeed: 5
+  maxActiveBackgrounds: 5
+  spawnPointName: SpawnPoint
+--- !u!4 &1838548702
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1838548700}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 11.534778, y: 16.941446, z: 0.8190693}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 194619837}
   - {fileID: 91608189}
+  - {fileID: 1838548702}

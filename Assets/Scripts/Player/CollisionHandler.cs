@@ -15,7 +15,6 @@ public class CollisionHandler : MonoBehaviour
     private ILevelManager levelManager;
     private CollisionFeedbackPlayer feedbackPlayer;
     private DebugHandler debugHandler;
-    private SkillHandler skillHandler;
     private CoinManager coinManager;
 
     private bool isControllable = true;
@@ -50,21 +49,15 @@ public class CollisionHandler : MonoBehaviour
                 StartSuccessSequence();
                 break;
             default:
+                Debug.LogError($"CollisionHandler: Collision with {other.gameObject.name} detected.");
+                if (SkillManager.Instance != null && SkillManager.Instance.IsShieldActive())
+                {
+                    Debug.Log("CollisionHandler: Shield active, ignoring obstacle collision.");
+                    return; // Bỏ qua va chạm với obstacle
+                }
                 StartCrashSequence();
                 break;
         }
-
-        // ISegmentQuantity segment = other.gameObject.GetComponentInParent<ISegmentQuantity>();
-        // if (segment != null)
-        // {
-        //     coinsCollected += segment.GetCoins();
-        //     HUDManager.Instance.UpdateScore(coinsCollected);
-        //     if (!skillHandler.HasShield())
-        //     {
-        //         health -= skillHandler.HasPierce() ? 0 : segment.GetDamage();
-        //         if (health <= 0) StartCrashSequence();
-        //     }
-        // }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -76,8 +69,29 @@ public class CollisionHandler : MonoBehaviour
             case "Coin":
                 HandleCoinCollection(other.gameObject);
                 break;
+            case "Shield":
+                // Nhặt skill shield
+                Debug.Log("CollisionHandler: Shield skill collected!");
+                HandleShieldCollection(other);
+                break;
             default:
                 break;
+        }
+    }
+
+    private void HandleShieldCollection(Collider other)
+    {
+        Debug.Log("CollisionHandler: Skill collected!");
+        if (SkillManager.Instance != null)
+        {
+            SkillManager.Instance.ActivateSkill("Shield", other.transform.position, transform);
+            HUDManager.Instance.GetImageTimer().gameObject.SetActive(true); // Hiện thanh thời gian
+            Debug.Log("CollisionHandler: Activated Shield skill.");
+            other.gameObject.SetActive(false); // Deactive SkillCircle sau khi nhặt
+        }
+        else
+        {
+            Debug.LogWarning("CollisionHandler: SkillManager.Instance is null! Cannot activate skill.");
         }
     }
 

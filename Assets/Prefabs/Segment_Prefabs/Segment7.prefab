@@ -452,8 +452,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa1547227c57c24409be2a5c545ebed0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementVector: {x: 40, y: 10, z: 0}
-  speed: 1
+  movementVector: {x: 0, y: 10, z: 0}
+  speed: 0.7
 --- !u!1001 &3985279993853243128
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -677,8 +677,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa1547227c57c24409be2a5c545ebed0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementVector: {x: 50, y: 10, z: 0}
-  speed: 1
+  movementVector: {x: 0, y: 13, z: 0}
+  speed: 0.6
 --- !u!1001 &6973376522875124686
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -798,8 +798,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa1547227c57c24409be2a5c545ebed0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementVector: {x: 28, y: 20, z: 0}
-  speed: 1
+  movementVector: {x: 0, y: 20, z: 0}
+  speed: 0.5
 --- !u!1001 &8735352584427221356
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -914,8 +914,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa1547227c57c24409be2a5c545ebed0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movementVector: {x: 28, y: 7, z: 0}
-  speed: 1
+  movementVector: {x: 0, y: 7, z: 0}
+  speed: 0.5
 --- !u!4 &9128952136039552647 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 151d34a463cbc19459a944508026bae6, type: 3}

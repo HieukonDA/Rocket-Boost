@@ -8,6 +8,7 @@ public class LevelManager : MonoBehaviour, ILevelManager
     public static LevelManager Instance { get; private set; }
 
     [SerializeField] private GameObject levelGeneratorPrefab;
+    [SerializeField] private Animator transitionAnim; // Prefab của Player
 
     // thiet lap interface
     private ILevelGenerator IlevelGenerator;
@@ -171,8 +172,11 @@ public class LevelManager : MonoBehaviour, ILevelManager
             currentSeed = (int)System.DateTime.Now.Ticks; // Seed mới cho level procedural tiếp theo
             levelDataManager.SetLastPlayerPosition(Vector3.zero);
             levelDataManager.SetIsDead(false);
+            HUDManager.Instance.SetLevelText(currentLevel);
         }
+        transitionAnim.SetTrigger("end");
         LoadLevel();
+        transitionAnim.SetTrigger("start");
     }
 
     public void OnLevelComplete()

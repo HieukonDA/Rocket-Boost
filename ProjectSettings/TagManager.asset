@@ -10,11 +10,12 @@ TagManager:
   - Start
   - CoinPoint
   - Coin
+  - Shield
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Shield
   - Water
   - UI
   - 
