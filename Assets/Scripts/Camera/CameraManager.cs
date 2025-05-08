@@ -15,11 +15,6 @@ public class CameraManager : MonoBehaviour, ICameraManager
             Destroy(gameObject);
             return;
         }
-
-        if (SceneManager.GetActiveScene().buildIndex == 2)
-        {
-            DontDestroyOnLoad(gameObject);
-        }
     }
 
     public void SetTarget(Transform target)

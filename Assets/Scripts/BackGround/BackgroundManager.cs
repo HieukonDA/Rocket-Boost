@@ -1,18 +1,18 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 
-public class BackgroundManager : MonoBehaviour, IBackgroundManager
+public class BackgroundManager : MonoBehaviour
 {
-    // public static BackgroundManager Instance { get; private set; }
     [SerializeField] private GameObject[] backgroundPrefabs;
+    [Header("offset")]
     [SerializeField] private float spawnDistance = 50f; // Khoảng cách spawn background tiếp theo
     [SerializeField] private float despawnDistance = 100f; // Khoảng cách để recycle background
     [SerializeField] private float backgroundDepth = 10f; // Độ sâu Z của background (xa hơn segment)
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private int maxActiveBackgrounds = 5;
     [SerializeField] private string spawnPointName = "SpawnPoint";
+    [SerializeField] private float playerWaitTimeout = 5f;
 
     private ObjectPool<GameObject> backgroundPool;
     private List<GameObject> activeBackgrounds = new List<GameObject>();
@@ -20,26 +20,44 @@ public class BackgroundManager : MonoBehaviour, IBackgroundManager
     private Vector3 lastSpawnPosition;
     private bool isSpawning;
 
-    private void Awake()
+    private void Start()
     {
-        // if (Instance != null)
-        // {
-        //     Destroy(gameObject);
-        //     return;
-        // }
-        // Instance = this;
-        // DontDestroyOnLoad(gameObject);
+        StartCoroutine(WaitForPlayer());
+    }
 
-        backgroundPool = new ObjectPool<GameObject>(() => InstantiateBackground(),backgroundPrefabs.Length, transform);
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-        lastSpawnPosition = new Vector3(player.position.x , 0, backgroundDepth); // Bắt đầu từ trái player
+    private IEnumerator WaitForPlayer()
+    {
+        float elapsedTime = 0f;
+        while (player == null && elapsedTime < playerWaitTimeout)
+        {
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                player = playerObj.transform;
+                Debug.Log($"BackgroundManager: Found player at {player.position}");
+                InitializeBackgroundSystem();
+                yield break;
+            }
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
 
-        // Spawn background ban đầu để che phủ tầm nhìn
+        if (player == null)
+        {
+            Debug.LogError($"BackgroundManager: Player not found after {playerWaitTimeout} seconds!");
+        }
+    }
+
+
+    private void InitializeBackgroundSystem()
+    {
+        backgroundPool = new ObjectPool<GameObject>(() => InstantiateBackground(), backgroundPrefabs.Length, transform);
+        lastSpawnPosition = new Vector3(player.position.x - 50, 0, backgroundDepth);
         InitializeBackgrounds();
     }
 
     private void InitializeBackgrounds()
-    {
+    {   
         float playerX = player.position.x;
         isSpawning = true;
         while (lastSpawnPosition.x < playerX + spawnDistance && activeBackgrounds.Count < maxActiveBackgrounds)
@@ -54,13 +72,11 @@ public class BackgroundManager : MonoBehaviour, IBackgroundManager
         if (player == null) return;
 
         ManageBackgrounds();
-        // MoveBackgrounds();
     }
     
     private void ManageBackgrounds()
     {
         float playerX = player.position.x;
-        Debug.Log($"BackgroundManager: Player X = {playerX}, Last Spawn Position X = {lastSpawnPosition.x}");
 
         //sinh backlgorund mới nếu player gần đến vị trí sinh background tiếp theo
         if(lastSpawnPosition.x < playerX +spawnDistance)
@@ -99,26 +115,6 @@ public class BackgroundManager : MonoBehaviour, IBackgroundManager
             // Fallback nếu không tìm thấy spawn point
             lastSpawnPosition = new Vector3(lastSpawnPosition.x + 50f, 0, backgroundDepth);
             Debug.LogWarning($"Background {bg.name} missing SpawnPoint. Using default offset: 50.");
-        }
-    }
-
-    private float GetBackgroundWidth(GameObject bg)
-    {
-        MeshFilter meshFilter = bg.GetComponent<MeshFilter>();
-        if (meshFilter != null && meshFilter.sharedMesh != null)
-        {
-            float width = meshFilter.sharedMesh.bounds.size.x * bg.transform.localScale.x;
-            if (width > 0.1f) return width;
-        }
-        Debug.LogWarning($"Background {bg.name} has invalid mesh width. Using default width: 50.");
-        return 50f;
-    }
-
-    private void MoveBackgrounds()
-    {
-        foreach (GameObject bg in activeBackgrounds)
-        {
-            bg.transform.position += Vector3.left * moveSpeed * Time.deltaTime;
         }
     }
 

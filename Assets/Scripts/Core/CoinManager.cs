@@ -8,6 +8,7 @@ public class CoinManager : MonoBehaviour, ICoinManager
     [SerializeField] private GameObject coinPrefab;
 
     private ObjectPool<GameObject> coinPool;
+    private LevelDataManager levelDataManager;
     private int coinCount = 0;
 
     private void Awake()
@@ -20,13 +21,16 @@ public class CoinManager : MonoBehaviour, ICoinManager
         Instance = this;
         DontDestroyOnLoad(gameObject);
         
+        levelDataManager = new LevelDataManager();
         coinPool = new ObjectPool<GameObject>(() => InstantiateCoin(), 20, transform); // Pool 20 coin ban đầu
+
+        int coinCount = levelDataManager.GetCoinCount();
+        Debug.Log($"CoinManager: Initialized with CoinCount = {coinCount}");
+        HUDManager.Instance.UpdateScore(coinCount);
     }
 
     public void SpawnCoins(Transform segment)
     {
-        Debug.LogWarning($"CoinManager: SpawnCoins called for segment: {segment.name}");
-       // Tìm CoinSpawnPoints trong segment
         Transform spawnPointsParent = segment.Find("CoinSpawnPoints");
         if (spawnPointsParent == null)
         {

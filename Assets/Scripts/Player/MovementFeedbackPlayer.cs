@@ -1,4 +1,6 @@
+using UnityEditor.SearchService;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MovementFeedbackPlayer
 {
@@ -17,7 +19,7 @@ public class MovementFeedbackPlayer
 
     public void PlayThrustFeedback()
     {
-        if (!audioManager.IsSoundPlaying())
+        if (!audioManager.IsSoundPlaying() && SceneManager.GetActiveScene().name != "Level1") 
         {
             audioManager.PlaySound("thrust");
         }

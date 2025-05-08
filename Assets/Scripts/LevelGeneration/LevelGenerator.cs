@@ -141,7 +141,7 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
             return; // Ngăn sinh lần thứ hai
         }
 
-        launchSegmentInstance = Instantiate(config.launchSegmentPrefab, Vector3.zero, Quaternion.identity, transform);
+        launchSegmentInstance = Instantiate(config.launchSegmentPrefab,new Vector3(0,0,0), Quaternion.identity, transform);
         launchSegmentInstance.SetActive(true);
         activeSegments.Add(launchSegmentInstance);
         spawnedSegmentCount++;
@@ -210,12 +210,13 @@ public class LevelGenerator : MonoBehaviour, ILevelGenerator
             launchPos = launchSegmentInstance.transform; // Dùng vị trí gốc của đoạn đầu nếu không tìm thấy
         }
 
-        Vector3 spawnPosition = launchPos.position;
-        GameObject playerInstance = Instantiate(config.playerPrefab, spawnPosition + new Vector3(0,5,0), Quaternion.identity, transform);
+        Vector3 spawnPosition = new Vector3(launchPos.position.x, launchPos.position.y + 5f, 0f);
+        Debug.LogWarning("Spawn position: " + spawnPosition + ", Launch position: " + launchPos.position);
+        GameObject playerInstance = Instantiate(config.playerPrefab,spawnPosition , Quaternion.identity, transform);
         playerInstance.tag = "Player";
         player = playerInstance.transform;
         FindFirstObjectByType<CameraManager>()?.SetTarget(player); // Camera sẽ được set trong OnSceneLoaded, nhưng để chắc chắn
-        Debug.LogError("Player spawned: " + playerInstance.name);
+        Debug.LogError("Player spawned: " + playerInstance.name + " at " + player.position);
     }
 
     private void SpawnSkillCircle(Transform segment)

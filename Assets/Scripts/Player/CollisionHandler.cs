@@ -1,9 +1,4 @@
-using System;
-using System.Data;
-using UnityEditor.SearchService;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 
 public class CollisionHandler : MonoBehaviour
 {
@@ -18,7 +13,6 @@ public class CollisionHandler : MonoBehaviour
     private CoinManager coinManager;
 
     private bool isControllable = true;
-    private int health = 3;
 
     private void Awake()
     {
@@ -26,7 +20,6 @@ public class CollisionHandler : MonoBehaviour
         audioManager = AudioManager.Instance;
         feedbackPlayer = new CollisionFeedbackPlayer(audioManager, successParticles, crashParticles);
         debugHandler = new DebugHandler(levelManager);
-        // skillHandler = gameObject.AddComponent<SkillHandler>();
         coinManager = CoinManager.Instance; // Lấy CoinManager từ scene
     }
 
@@ -81,7 +74,6 @@ public class CollisionHandler : MonoBehaviour
 
     private void HandleShieldCollection(Collider other)
     {
-        Debug.Log("CollisionHandler: Skill collected!");
         if (SkillManager.Instance != null)
         {
             SkillManager.Instance.ActivateSkill("Shield", other.transform.position, transform);

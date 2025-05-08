@@ -1,7 +1,5 @@
-using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Unity.Cinemachine;
 
 public class LevelManager : MonoBehaviour, ILevelManager 
 {
@@ -30,15 +28,15 @@ public class LevelManager : MonoBehaviour, ILevelManager
         DontDestroyOnLoad(gameObject);
 
         // Xóa PlayerPrefs khi chạy trong Editor (chỉ để debug)
-        if (Debug.isDebugBuild)
-        {
-            PlayerPrefs.DeleteAll();
-            PlayerPrefs.Save();
-            Debug.Log("PlayerPrefs đã được xóa để bắt đầu từ Level 1");
-        }
+        // if (Debug.isDebugBuild)
+        // {
+        //     PlayerPrefs.DeleteAll();
+        //     PlayerPrefs.Save();
+        //     Debug.Log("PlayerPrefs đã được xóa để bắt đầu từ Level 1");
+        // }
 
         levelDataManager = new LevelDataManager();
-        levelDataManager.LoadLevelData(out currentLevel, out currentSeed, out Vector3 lastPlayerPosition, out bool isDead);
+        levelDataManager.LoadLevelData(out currentLevel, out currentSeed, out Vector3 lastPlayerPosition, out bool isDead, out int coinCount);
         levelDataManager.SetLastPlayerPosition(lastPlayerPosition);
         levelDataManager.SetIsDead(isDead);
 
@@ -49,19 +47,28 @@ public class LevelManager : MonoBehaviour, ILevelManager
     {
         // setting camera
         IcameraManager = (ICameraManager)GameObject.FindFirstObjectByType<CameraManager>();
-        if (currentLevel > 3)
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
         {
-            GameObject player = GameObject.FindWithTag("Player");
-            if (player != null)
-            {
-                playerTransform = player.transform;
-                IcameraManager?.SetTarget(playerTransform);
-            }
-            else
-            {
-                playerTransform = null;
-            }
+            playerTransform = player.transform;
+            IcameraManager?.SetTarget(playerTransform);
         }
+        else
+        {
+            playerTransform = null;
+        }
+
+        GameObject transitionObj = GameObject.Find("TransitionPanel");
+        if (transitionObj != null)
+        {
+            transitionAnim = transitionObj.GetComponent<Animator>();
+            Debug.Log("TransitionAnim found: " + transitionAnim.name);
+        }
+        else
+        {
+            Debug.LogError("TransitionAnim not found in the scene.");
+        }
+
     }
 
     void Start()
@@ -73,18 +80,9 @@ public class LevelManager : MonoBehaviour, ILevelManager
     private void LoadLevel()
     {
         Debug.Log("LoadLevel called for Level " + currentLevel + " at time: " + Time.time);
-        if (currentLevel <= 3)
-        {
-            // Load scene tĩnh
-            SceneManager.LoadScene("Level" + currentLevel);
-        }
-        else
-        {
-            // Load scene procedural và sinh level tự động
-            SceneManager.LoadScene("ProceduralLevel");
-            GenerateProceduralLevel();
-        }
-        Debug.Log($"Loading Level {currentLevel}");
+        // Load scene procedural và sinh level tự động
+        SceneManager.LoadScene("ProceduralLevel");
+        GenerateProceduralLevel();
     }
 
     private void GenerateProceduralLevel()
@@ -103,63 +101,45 @@ public class LevelManager : MonoBehaviour, ILevelManager
             currentSeed = (int)System.DateTime.Now.Ticks; 
         }
         
-        IlevelGenerator.GenerateLevel(currentLevel - 3, currentSeed); // Level 4 = 1, Level 5 = 2,...
+        IlevelGenerator.GenerateLevel(currentLevel - 1, currentSeed); 
 
         // Lưu lại thông tin level
         GameObject player = GameObject.FindWithTag("Player");
         if (player != null)
         {
-            player.GetComponent<Movement>().SetPosition(levelDataManager.GetIsDead() ? levelDataManager.GetLastPlayerPosition() : Vector3.zero);
             player.GetComponent<Movement>().enabled = true;
         }
 
-        levelDataManager.SaveLevelData(currentLevel, currentSeed, levelDataManager.GetLastPlayerPosition(), levelDataManager.GetIsDead());
+        levelDataManager.SaveLevelData(currentLevel, currentSeed, levelDataManager.GetLastPlayerPosition(), levelDataManager.GetIsDead(), CoinManager.Instance.GetCoinCount());
+        HUDManager.Instance.SetLevelText(currentLevel);
     }
 
-        public void RestartLevel()
-        {
-            Debug.Log("RestartLevel called at time: " + Time.time);
-            if (currentLevel <= 3)
-            {
-                LoadLevel(); // Reload scene tĩnh
-            }
-            else
-            {
-                GenerateProceduralLevel(); // Tái tạo level với seed hiện tại
-                levelDataManager.SetLastPlayerPosition(Vector3.zero);
-                levelDataManager.SetIsDead(false);
-                HUDManager.Instance?.ControllActiveScoreText(true);
-                CoinManager.Instance.ResetCoinCount();
-                HUDManager.Instance.UpdateScore(0);
-            }
-        }
+    public void RestartLevel()
+    {
+        GenerateProceduralLevel(); // Tái tạo level với seed hiện tại
+        levelDataManager.SetLastPlayerPosition(Vector3.zero);
+        levelDataManager.SetIsDead(false);
+        HUDManager.Instance?.ControllActiveScoreText(true);
+        HUDManager.Instance.UpdateScore(CoinManager.Instance.GetCoinCount());
+    }
 
     public void ResumeFromDeath()
     {
-        if (currentLevel <= 3)
-        {
-            LoadLevel(); // Reload scene tĩnh, không lưu vị trí chết
-        }
-        else
-        {
-            GenerateProceduralLevel(); // Tái tạo level, giữ vị trí chết
-        }
+        GenerateProceduralLevel(); // Tái tạo level, giữ vị trí chết
+        HUDManager.Instance.UpdateScore(CoinManager.Instance.GetCoinCount());
     }
 
     public void OnPlayerDeath(Vector3 deathPosition)
     {
-        if (currentLevel > 3)
+        levelDataManager.SetIsDead(true);
+        levelDataManager.SetLastPlayerPosition(deathPosition);
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
         {
-            levelDataManager.SetIsDead(true);
-            levelDataManager.SetLastPlayerPosition(deathPosition);
-            GameObject player = GameObject.FindWithTag("Player");
-            if (player != null)
-            {
-                player.GetComponent<Movement>().enabled = false;
-            }
-            levelDataManager.SaveLevelData(currentLevel, currentSeed, deathPosition, true);
-            
+            player.GetComponent<Movement>().enabled = false;
         }
+        levelDataManager.SaveLevelData(currentLevel, currentSeed, deathPosition, true, CoinManager.Instance.GetCoinCount());
+        HUDManager.Instance.GetImageTimer().gameObject.SetActive(false);    
         MainUI.Instance.ShowGameOver(HUDManager.Instance.GetScore());
     }
 
@@ -167,13 +147,12 @@ public class LevelManager : MonoBehaviour, ILevelManager
     {
         Debug.Log($"NextLevel called - Moving from Level {currentLevel} to {currentLevel + 1}");
         currentLevel++;
-        if (currentLevel > 3)
-        {
-            currentSeed = (int)System.DateTime.Now.Ticks; // Seed mới cho level procedural tiếp theo
-            levelDataManager.SetLastPlayerPosition(Vector3.zero);
-            levelDataManager.SetIsDead(false);
-            HUDManager.Instance.SetLevelText(currentLevel);
-        }
+        
+        currentSeed = (int)System.DateTime.Now.Ticks; // Seed mới cho level procedural tiếp theo
+        levelDataManager.SetLastPlayerPosition(Vector3.zero);
+        levelDataManager.SetIsDead(false);
+        HUDManager.Instance.SetLevelText(currentLevel);
+        
         transitionAnim.SetTrigger("end");
         LoadLevel();
         transitionAnim.SetTrigger("start");
@@ -183,5 +162,35 @@ public class LevelManager : MonoBehaviour, ILevelManager
     {
         Debug.Log($"OnLevelComplete called - Level {currentLevel} completed");
         NextLevel();
+    }
+
+    public void OnPaused()
+    {
+        Time.timeScale = 0f; // Tạm dừng game
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            player.GetComponent<Movement>().enabled = false; // Tắt di chuyển
+        }
+        BackgroundManager backgroundManager = FindFirstObjectByType<BackgroundManager>();
+        if (backgroundManager != null)
+        {
+            backgroundManager.enabled = false; // Tắt spawn/di chuyển background
+        }
+    }
+
+    internal void OnResume()
+    {
+        Time.timeScale = 1f; // Khôi phục game
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            player.GetComponent<Movement>().enabled = true; // Bật di chuyển
+        }
+        BackgroundManager backgroundManager = FindFirstObjectByType<BackgroundManager>();
+        if (backgroundManager != null)
+        {
+            backgroundManager.enabled = true; // Bật spawn/di chuyển background
+        }
     }
 }

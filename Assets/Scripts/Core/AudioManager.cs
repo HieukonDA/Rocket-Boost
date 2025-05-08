@@ -56,7 +56,7 @@ public class AudioManager : MonoBehaviour, IAudioManager
         }
         else
         {
-            Debug.LogWarning($"Sound {soundName} not found");
+            Debug.LogWarning($"AudioManager: Sound {soundName} not found");
         }
     }
 
@@ -75,7 +75,7 @@ public class AudioManager : MonoBehaviour, IAudioManager
         }
         else
         {
-            Debug.LogWarning($"Sound {soundName} not found");
+            Debug.LogWarning($"AudioManager: Sound {soundName} not found");
         }
     }
 
@@ -87,10 +87,10 @@ public class AudioManager : MonoBehaviour, IAudioManager
     public bool IsSoundPlaying()
     {
         if (sfxPlayer == null)
-    {
-        Debug.LogWarning("SFXPlayer is null, reinitializing...");
-        sfxPlayer = new SFXPlayer(gameObject, sfxSourceCount);
-    }
+        {
+            Debug.LogWarning("SFXPlayer is null, reinitializing...");
+            sfxPlayer = new SFXPlayer(gameObject, sfxSourceCount);
+        }
         return sfxPlayer.IsSoundPlaying();
     }
 
